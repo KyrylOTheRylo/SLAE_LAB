@@ -1,11 +1,43 @@
 import numpy as np
-from scipy.linalg import lu_solve, lu_factor
-import timeit
+from abc import ABC
 
 
-class FirstMatrix:
+class abstract(ABC):
+    def __init__(self):
+        """initialization for a class"""
+        self._mtr = None
+        self._sol = None
 
+    @staticmethod
+    def _generator_random(n) -> np.array:
+        return np.random.randint(-20, 21, [n, n]).astype("float")
+
+    @property
+    def get_matrix(self) -> np.ndarray:
+        return self._mtr
+
+    @get_matrix.getter
+    def get_matrix(self) -> np.ndarray:
+        return self._mtr
+
+    def _find_b(self):
+        self._b = self._mtr @ self._sol
+        return self._b
+
+    @property
+    def sol(self):
+
+        return self._sol
+
+    @sol.getter
+    def sol(self):
+        """returns answer to check"""
+        return self._sol
+
+
+class FirstMatrix(abstract):
     def __init__(self, random: bool = False, n: int = 3) -> None:
+        super().__init__()
         self._mtr = None
         self._sol = np.random.randint(-10, 11, [n, 1]).astype("float")
         self._b = np.zeros([4, 1], dtype=np.double)
@@ -17,19 +49,8 @@ class FirstMatrix:
             self._mtr = np.array([[1 / (i + j + 1) for i in range(n)] for j in range(n)])
         self._find_b()
 
-    @staticmethod
-    def _generator_random(n) -> np.array:
-        return np.random.randint(-20, 21, [n, n]).astype("float")
-
-    def get_matrix(self) -> np.ndarray:
-        return self._mtr
-
-    def _find_b(self):
-        self._b = self._mtr @ self._sol
-        return self._b
-
     def plu(self):
-
+        """returns P, L, U components """
         n = self._mtr.shape[0]
         P, U, L = np.eye(n, dtype=np.double), self._mtr.copy(), np.eye(n, dtype=np.double)
         U.astype('float')
@@ -48,7 +69,7 @@ class FirstMatrix:
         return P, L, U
 
     @staticmethod
-    def forward_substitution(l1, b):
+    def _forward_substitution(l1, b):
 
         n = l1.shape[0]
 
@@ -62,7 +83,7 @@ class FirstMatrix:
         return y
 
     @staticmethod
-    def back_substitution(u, y):
+    def _back_substitution(u, y):
 
         # Number of rows
         n = u.shape[0]
@@ -86,19 +107,6 @@ class FirstMatrix:
 
         P, L, U = self.plu()
 
-        y = self.forward_substitution(L, np.dot(P, self._b))
+        y = self._forward_substitution(L, np.dot(P, self._b))
 
-        return self.back_substitution(U, y)
-
-    @property
-    def sol(self):
-        return self._sol
-
-    @sol.getter
-    def sol(self):
-        return self._sol
-
-
-c = FirstMatrix(False, 5)
-print(c.lu_solve())
-print(c.sol)
+        return self._back_substitution(U, y)
